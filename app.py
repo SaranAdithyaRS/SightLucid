@@ -86,7 +86,7 @@ def send_alert_via_email(contact, location, image_path):
     try:
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login('sightlucid@gmail.com', os.getenv('EMAIL PWD'))  # Use environment variable for password
+            server.login('sightlucid@gmail.com', os.getenv('EMAILPWD'))  # Use environment variable for password
             server.sendmail(msg['From'], msg['To'], msg.as_string())
         logging.info(f"Email alert sent to {contact}")
     except Exception as e:
