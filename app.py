@@ -11,13 +11,17 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import logging
 import time
+import os
 
 app = Flask(__name__)
 CORS(app)
 detection_active = False
 
-
 logging.basicConfig(level=logging.INFO)
+
+# Function to check if the environment is headless (no display)
+def is_headless():
+    return 'DISPLAY' not in os.environ
 
 def detect_human(method, contact, country_code):
     global detection_active
@@ -48,7 +52,7 @@ def detect_human(method, contact, country_code):
             location = g.city or "Unknown"
 
             try:
-                if method == 'WhatsApp':
+                if method == 'WhatsApp' and not is_headless():
                     send_alert_via_whatsapp(contact, country_code, location, image_path)
                 elif method == 'Email':
                     send_alert_via_email(contact, location, image_path)
@@ -57,12 +61,15 @@ def detect_human(method, contact, country_code):
                 logging.error(f"Error sending alert: {e}")
             break
 
-        cv2.imshow('LucidSight - Human Detection', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # Only show the camera feed if not in a headless environment
+        if not is_headless():
+            cv2.imshow('LucidSight - Human Detection', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
     cap.release()
-    cv2.destroyAllWindows()
+    if not is_headless():
+        cv2.destroyAllWindows()
 
 def send_alert_via_whatsapp(contact, country_code, location, image_path):
     message = f"🚨 Alert: Human detected at {location} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -77,11 +84,7 @@ def send_alert_via_whatsapp(contact, country_code, location, image_path):
             wait_time=10
         )
         logging.info(f"WhatsApp alert sent to {phone_number}")
-
-        # Wait to ensure message is sent
-        time.sleep(5)
-
-        # After waiting, you can confirm if the message is sent, and if not, try sending it again.
+        time.sleep(5)  # Wait to ensure message is sent
         logging.info(f"WhatsApp message to {phone_number} has been sent successfully.")
     except Exception as e:
         logging.error(f"Failed to send WhatsApp: {e}")
@@ -104,13 +107,14 @@ def send_alert_via_email(contact, location, image_path):
     try:
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login('sightlucid@gmail.com', 'your_app_password_here')  # App Password
+            server.login('sightlucid@gmail.com', os.getenv('prfh ywjc uvea uaeh'))  # Use environment variable for password
             server.sendmail(msg['From'], msg['To'], msg.as_string())
         logging.info(f"Email alert sent to {contact}")
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
 
 # ---------- Flask Routes ----------
+
 @app.route('/')
 def home():
     return render_template('index.html')
