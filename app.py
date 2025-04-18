@@ -13,7 +13,7 @@ import time
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://lucidsight.netlify.app"], supports_credentials=True)
 detection_active = False
 
 logging.basicConfig(level=logging.INFO)
