@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import threading
 import cv2
-import pywhatkit as kit
 import geocoder
 from datetime import datetime
 import smtplib
@@ -52,9 +51,7 @@ def detect_human(method, contact, country_code):
             location = g.city or "Unknown"
 
             try:
-                if method == 'WhatsApp' and not is_headless():
-                    send_alert_via_whatsapp(contact, country_code, location, image_path)
-                elif method == 'Email':
+                if method == 'Email':
                     send_alert_via_email(contact, location, image_path)
                 logging.info("Alert sent successfully.")
             except Exception as e:
@@ -70,24 +67,6 @@ def detect_human(method, contact, country_code):
     cap.release()
     if not is_headless():
         cv2.destroyAllWindows()
-
-def send_alert_via_whatsapp(contact, country_code, location, image_path):
-    message = f"🚨 Alert: Human detected at {location} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    phone_number = f"+{country_code}{contact}"
-
-    try:
-        # Send the WhatsApp message
-        kit.sendwhats_image(
-            receiver=phone_number,
-            img_path=image_path,
-            caption=message,
-            wait_time=10
-        )
-        logging.info(f"WhatsApp alert sent to {phone_number}")
-        time.sleep(5)  # Wait to ensure message is sent
-        logging.info(f"WhatsApp message to {phone_number} has been sent successfully.")
-    except Exception as e:
-        logging.error(f"Failed to send WhatsApp: {e}")
 
 def send_alert_via_email(contact, location, image_path):
     message = f"🚨 Alert: Human detected at {location} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -107,7 +86,7 @@ def send_alert_via_email(contact, location, image_path):
     try:
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login('sightlucid@gmail.com', os.getenv('prfh ywjc uvea uaeh'))  # Use environment variable for password
+            server.login('sightlucid@gmail.com', os.getenv('EMAIL PWD'))  # Use environment variable for password
             server.sendmail(msg['From'], msg['To'], msg.as_string())
         logging.info(f"Email alert sent to {contact}")
     except Exception as e:
