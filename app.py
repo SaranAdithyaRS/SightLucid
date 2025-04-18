@@ -22,6 +22,14 @@ logging.basicConfig(level=logging.INFO)
 def is_headless():
     return 'DISPLAY' not in os.environ
 
+@app.route('/api/endpoint', methods=["OPTIONS"])
+def handle_options():
+    response = jsonify({'message': 'CORS preflight passed'})
+    response.headers.add('Access-Control-Allow-Origin', 'https://lucidsight.netlify.app')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return response
+
 def detect_human(method, contact, country_code):
     global detection_active
 
